@@ -23,14 +23,12 @@ if DBURL.startswith("postgres://"):
 engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {}, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# --- SENHAS COM BCRYPT - FUNCIONA NO PYTHON 3.15 ---
 class Pwd:
     def hash(self, p): return bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode()
     def verify(self, p, h):
         try: return bcrypt.checkpw(p.encode(), h.encode())
         except: return False
 pwd = Pwd()
-
 def agora(): return datetime.now(timezone.utc)
 class Base(DeclarativeBase): pass
 
@@ -184,13 +182,20 @@ def init_data():
                 ("Sumo Cappy","Bebidas",120,60,40,"/static/imagem/CAPPY.jpg","Sumo Cappy"),
                 ("Hambúrguer","Lanches",350,180,30,"/static/imagem/hamburguer.jpg","Hambúrguer da casa"),
                 ("Coca-Cola Lata","Bebidas",100,55,60,"/static/imagem/lat.jpg","Coca-Cola gelada"),
-                ("Sumo Natural","Bebidas",150,70,30,"/static/imagem/natural.avif","Sumo natural do dia"),
+                ("Sumo Natural","Bebidas",150,70,30,"/static/imagem/natural.jpg","Sumo natural do dia"),
                 ("Prego","Lanches",280,140,25,"/static/imagem/prego.jpg","Prego no pão"),
                 ("Sanduíche / Sando","Lanches",200,100,30,"/static/imagem/sando.jpg","Sando fresco"),
-                ("Bolo de Aniversário","Bolos",1500,700,5,"/static/imagem/sumo.avif","Bolo por encomenda - preço base, personalização altera preço"),
+                ("Sumo","Bebidas",90,40,40,"/static/imagem/sumo.jpg","Sumo fresco"),
             ]
             for p in dados: d.add(Product(nome=p[0], categoria=p[1], preco=p[2], custo=p[3], stock=p[4], foto=p[5], descricao=p[6]))
             d.commit()
+        # CORRIGE FOTOS ANTIGAS .avif SE JÁ EXISTIAM
+        for p in d.query(Product).all():
+            if p.foto.endswith(".avif"):
+                p.foto = p.foto.replace(".avif", ".jpg")
+            if p.nome == "Bolo de Aniversário":
+                p.nome = "Sumo"; p.preco = 90; p.foto = "/static/imagem/sumo.jpg"; p.categoria = "Bebidas"
+        d.commit()
         if d.query(Fornecedor).count() == 0:
             for f in [("Coca-Cola Matola","841234567","Coca-Cola Lata",55,"Matola"),("Pão Matola","849876543","Pão Hambúrguer",40,"Matola"),("Frutas Maputo","842222333","Fruta p/ Sumo",70,"Maputo")]:
                 d.add(Fornecedor(nome=f[0], telefone=f[1], produto=f[2], preco=f[3], localizacao=f[4]))
@@ -217,6 +222,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 def home(): return open("static/index.html", encoding="utf-8").read()
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page(): return open("static/dashboard.html", encoding="utf-8").read()
 @app.get("/api/health")
 def health(): return {"status": "ok", "app": "TONGAS V3"}
 
@@ -276,7 +283,6 @@ def login(x: Login, d: Session = Depends(dbdep)):
 @app.get("/api/me")
 def me(u: User = Depends(current_user)):
     return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "endereco": u.endereco, "tipo": u.tipo, "is_admin": u.is_admin, "pontos": u.pontos}
-
 @app.put("/api/me")
 def atualizar_meu_perfil(x: PerfilIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     if x.nome: u.nome = x.nome
@@ -285,7 +291,6 @@ def atualizar_meu_perfil(x: PerfilIn, u: User = Depends(current_user), d: Sessio
     if x.email: u.email = x.email
     if x.foto: u.foto = x.foto
     d.commit(); return {"ok": True, "msg": "Perfil atualizado!"}
-
 @app.post("/api/me/senha")
 def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     try: ok = pwd.verify(x.antiga, u.password_hash)
@@ -293,12 +298,10 @@ def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depend
     if not ok: raise HTTPException(401, "Senha antiga errada.")
     if len(x.nova) < 4: raise HTTPException(400, "Nova senha muito curta")
     u.password_hash = pwd.hash(x.nova); d.commit(); return {"ok": True, "msg": "Senha trocada!"}
-
 @app.get("/api/pessoas")
 def pessoas(u: User = Depends(admin_only), d: Session = Depends(dbdep)):
     lista = d.query(User).all()
     return [{"id": x.id, "nome": x.nome, "telefone": x.telefone, "idade": x.idade, "email": x.email, "foto": x.foto, "bairro": x.bairro, "tipo": x.tipo, "active": x.is_active, "pontos": x.pontos} for x in lista]
-
 @app.post("/api/pessoas/{pid}/demitir")
 def demitir(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     u = d.get(User, pid)
@@ -316,7 +319,6 @@ def apagar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(
     if not u: raise HTTPException(404, "Não existe")
     if u.is_admin: raise HTTPException(400, "Não podes apagar o Admin!")
     d.delete(u); d.commit(); return {"ok": True}
-
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo if u.is_admin else 0, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "descricao": p.descricao} for p in d.query(Product).order_by(Product.nome).all()]
@@ -336,7 +338,6 @@ def del_product(pid: int, a: User = Depends(admin_only), d: Session = Depends(db
     p = d.get(Product, pid)
     if not p: raise HTTPException(404, "Não existe")
     d.delete(p); d.commit(); return {"ok": True}
-
 @app.post("/api/producao")
 def registar_producao(x: ProducaoIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     p = d.get(Product, x.produto_id)
@@ -344,7 +345,6 @@ def registar_producao(x: ProducaoIn, u: User = Depends(funcionario_only), d: Ses
     p.stock += x.qtd; p.updated_by = u.nome; d.commit()
     log_action(d, u.nome, u.tipo, "producao", f"Produziu {p.nome} x{x.qtd} - {x.obs}")
     return {"ok": True, "stock": p.stock}
-
 @app.get("/api/fornecedores")
 def get_forn(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     return [{"id": f.id, "nome": f.nome, "telefone": f.telefone, "produto": f.produto, "preco": f.preco, "localizacao": f.localizacao} for f in d.query(Fornecedor).all()]
@@ -358,7 +358,6 @@ def add_compra(x: CompraIn, u: User = Depends(funcionario_only), d: Session = De
     total = x.qtd * x.preco_unitario
     c = Compra(fornecedor=f.nome, produto=x.produto, qtd=x.qtd, preco_unitario=x.preco_unitario, total=total, pagamento=x.pagamento, comprado_por=u.nome); d.add(c); d.commit(); log_action(d, u.nome, u.tipo, "compra", f"{x.produto} x{x.qtd} = {total} MT")
     return {"ok": True, "total": total}
-
 @app.post("/api/vendas")
 def add_venda(x: VendaIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     p = d.get(Product, x.produto_id)
@@ -384,11 +383,9 @@ def anular_venda(vid: int, a: User = Depends(admin_only), d: Session = Depends(d
     p = d.query(Product).filter_by(nome=v.produto).first()
     if p: p.stock += v.qtd
     d.delete(v); d.commit(); log_action(d, a.nome, "Admin", "anular_venda", f"Anulou venda #{vid}"); return {"ok": True}
-
 @app.post("/api/despesas")
 def add_despesa(x: DespesaIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     ds = Despesa(**x.model_dump(), criado_por=u.nome); d.add(ds); d.commit(); return {"ok": True}
-
 @app.get("/api/encomendas")
 def get_enc(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     q = d.query(Encomenda)
@@ -400,7 +397,7 @@ def add_enc(x: EncIn, u: User = Depends(current_user), d: Session = Depends(dbde
     prod = d.query(Product).filter_by(nome=x.tipo).first()
     preco_base = prod.preco if prod else 0
     e = Encomenda(cliente=x.cliente, telefone=x.telefone or u.telefone, tipo=x.tipo, personalizacao=x.personalizacao, data_entrega=x.data_entrega, hora_entrega=x.hora_entrega, modo=x.modo, preco=preco_base, sinal=x.sinal, obs=x.obs, estado="Recebida"); d.add(e); d.commit(); log_action(d, u.nome, u.tipo, "encomenda", f"{x.tipo} para {x.data_entrega}")
-    return {"ok": True, "preco_base": preco_base, "msg": "Encomenda recebida! A padaria vai confirmar o preço final conforme a personalização."}
+    return {"ok": True, "preco_base": preco_base, "msg": "Encomenda recebida!"}
 @app.post("/api/encomendas/{eid}/estado")
 def mudar_estado_enc(eid: int, estado: str, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     e = d.get(Encomenda, eid)
@@ -411,28 +408,24 @@ def cancelar_enc(eid: int, u: User = Depends(current_user), d: Session = Depends
     e = d.get(Encomenda, eid)
     if not e: raise HTTPException(404, "Não existe")
     if normalizar_tipo(u.tipo) == "Cliente" and e.telefone != u.telefone and not u.is_admin: raise HTTPException(403, "Só podes cancelar as tuas encomendas")
-    if e.estado in ["Entregue","Pronta"]: raise HTTPException(400, "Já não podes cancelar - já está pronta/entregue. Fala com a padaria.")
+    if e.estado in ["Entregue","Pronta"]: raise HTTPException(400, "Já não podes cancelar - já está pronta/entregue.")
     e.estado = "Cancelada"; d.commit(); return {"ok": True}
-
 @app.get("/api/meu-historico")
 def meu_historico(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).filter_by(cliente_tel=u.telefone).order_by(Venda.created_at.desc()).all() if normalizar_tipo(u.tipo)=="Cliente" else d.query(Venda).order_by(Venda.created_at.desc()).limit(50).all()
     return [{"id": v.id, "produto": v.produto, "qtd": v.qtd, "total": v.total, "pagamento": v.pagamento, "estado": v.estado, "data": v.created_at.strftime("%d/%m/%Y %H:%M")} for v in vendas]
-
 @app.post("/api/sugestoes")
 def add_sugestao(x: SugestaoIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     s = Sugestao(cliente=u.nome, texto=x.texto, tipo=x.tipo); d.add(s); d.commit(); return {"ok": True}
 @app.get("/api/sugestoes")
 def get_sugestao(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return [{"id": s.id, "cliente": s.cliente, "texto": s.texto, "tipo": s.tipo, "data": s.created_at.strftime("%d/%m/%Y")} for s in d.query(Sugestao).order_by(Sugestao.created_at.desc()).all()]
-
 @app.get("/api/financeiro")
 def financeiro(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).order_by(Venda.created_at.desc()).limit(300).all()
     despesas = d.query(Despesa).order_by(Despesa.created_at.desc()).limit(300).all()
     compras = d.query(Compra).order_by(Compra.created_at.desc()).limit(300).all()
     return {"vendas": [{"id": v.id, "cliente": v.cliente, "vendedor": v.vendedor, "produto": v.produto, "qtd": v.qtd, "total": v.total, "lucro": v.lucro, "pagamento": v.pagamento, "estado": v.estado, "data": v.created_at.isoformat()} for v in vendas], "despesas": [{"id": x.id, "descricao": x.descricao, "valor": x.valor, "categoria": x.categoria, "criado_por": x.criado_por} for x in despesas], "compras": [{"id": c.id, "fornecedor": c.fornecedor, "produto": c.produto, "qtd": c.qtd, "total": c.total, "pagamento": c.pagamento, "comprado_por": c.comprado_por} for c in compras], "dividas": [{"id": v.id, "cliente": v.cliente, "produto": v.produto, "total": v.total, "data_pagamento": v.data_pagamento} for v in vendas if v.estado=="Dívida"], "resumo": {"entradas": sum(v.total for v in vendas), "saidas": sum(x.valor for x in despesas), "compras_total": sum(c.total for c in compras), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado=="Dívida")}}
-
 @app.get("/api/dashboard")
 def dashboard(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).all(); produtos = d.query(Product).all(); users = d.query(User).all(); despesas = d.query(Despesa).all(); compras = d.query(Compra).all(); hoje = date.today()
@@ -446,7 +439,6 @@ def dashboard(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     por_pag = {}
     for v in vendas: por_pag[v.pagamento] = por_pag.get(v.pagamento, 0) + v.total
     return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": sum(x.total for x in vendas if x.created_at.month == hoje.month), "lucro": sum(x.lucro for x in vendas if x.created_at.month == hoje.month) - sum(x.total for x in compras if x.created_at.month == hoje.month) - sum(x.valor for x in despesas if x.created_at.month == hoje.month)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
-
 @app.get("/api/recibo/venda/{vid}")
 def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep)):
     v = d.get(Venda, vid)
@@ -457,7 +449,6 @@ def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep)):
     pdf.cell(0, 8, f"Produto: {v.produto} x{v.qtd} | Pagamento: {v.pagamento} | Estado: {v.estado}", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "B", 14); pdf.cell(0, 12, f"TOTAL: {v.total} MT", new_x="LMARGIN", new_y="NEXT")
     out = bytes(pdf.output()); return Response(content=out, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=recibo_venda_{vid}.pdf"})
-
 @app.get("/api/export/excel")
 def export_excel(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     wb = openpyxl.Workbook(); ws = wb.active; ws.title = "Vendas"; ws.append(["Data","Cliente","Vendedor","Produto","Qtd","Total MT","Lucro MT","Pagamento","Estado"])
@@ -466,13 +457,11 @@ def export_excel(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     for p in d.query(Product).all(): ws2.append([p.nome, p.categoria, p.preco, p.custo, p.stock])
     buf = io.BytesIO(); wb.save(buf); buf.seek(0)
     return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=tongas.xlsx"})
-
 @app.get("/api/admin/painel")
 def painel_admin(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).order_by(Venda.created_at.desc()).limit(100).all(); compras = d.query(Compra).order_by(Compra.created_at.desc()).limit(100).all(); logs = d.query(Log).order_by(Log.created_at.desc()).limit(300).all()
     total_v = sum(v.total for v in d.query(Venda).all()); total_c = sum(c.total for c in d.query(Compra).all()); total_d = sum(x.valor for x in d.query(Despesa).all())
     return {"resumo": {"total_vendas": total_v, "lucro_bruto": sum(v.lucro for v in d.query(Venda).all()), "total_compras": total_c, "total_despesas": total_d, "lucro_liquido_final": total_v - total_c - total_d, "dividas": sum(v.total for v in d.query(Venda).all() if v.estado == "Dívida")}, "ultimas_vendas": [{"id": v.id, "data": v.created_at.strftime("%d/%m/%Y"), "hora": v.created_at.strftime("%H:%M:%S"), "cliente": v.cliente, "vendedor": v.vendedor, "produto": v.produto, "qtd": v.qtd, "total": v.total, "lucro": v.lucro, "pagamento": v.pagamento, "estado": v.estado} for v in vendas], "ultimas_compras": [{"id": c.id, "data": c.created_at.strftime("%d/%m/%Y"), "fornecedor": c.fornecedor, "produto": c.produto, "qtd": c.qtd, "total": c.total, "comprado_por": c.comprado_por} for c in compras], "fluxo": [{"data": l.created_at.strftime("%d/%m/%Y %H:%M:%S"), "quem": l.quem, "tipo": l.tipo, "acao": l.acao, "detalhe": l.detalhe} for l in logs]}
-
 @app.get("/api/backup")
 def backup(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
