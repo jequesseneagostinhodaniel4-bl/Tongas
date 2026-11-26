@@ -6,3 +6,4 @@ bcrypt
 sqlalchemy
 fpdf2
 openpyxl
+psycopg[binary]
