@@ -5,42 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tongas - Lanchonete & BBQ</title>
 <link rel="stylesheet" href="/static/style.css">
-<style>
-/* ===== NOVO DESIGN TONGAS PRO ===== */
-.login-page{display:flex;min-height:100vh}
-.login-left{position:relative;flex:1.25;overflow:hidden;background:#0f0a06;display:flex;align-items:flex-end}
-.login-left .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
-.login-left .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,.15) 100%),linear-gradient(to top,rgba(0,0,0,.85),transparent 60%)}
-.login-left .txt{position:relative;z-index:2;padding:38px 38px 30px;width:100%;max-width:620px}
-.logo-hero{width:150px;height:150px;border-radius:50%;object-fit:cover;background:#fff;padding:6px;border:4px solid #ff7a00;box-shadow:0 12px 30px rgba(0,0,0,.5);margin-bottom:16px}
-.badge-top{display:inline-block;background:#ff7a00;color:#fff;font-weight:800;font-size:12px;letter-spacing:1px;padding:7px 12px;border-radius:999px;margin-bottom:12px}
-.login-left h1{color:#fff;font-size:52px;line-height:.95;margin:0 0 12px;font-weight:900}
-.login-left h1 i{color:#ff8c1a;font-style:normal}
-.login-left p{color:#ffe9c9;font-size:16px;line-height:1.5;max-width:520px}
-.hero-btns{display:flex;gap:10px;margin:18px 0}
-.hero-btns button{border:none;padding:13px 18px;border-radius:999px;font-weight:800;cursor:pointer}
-.hero-btns .b1{background:#ff7a00;color:#fff}
-.hero-btns .b2{background:#fff;color:#111}
-.hero-cards{display:flex;gap:10px;margin-top:10px}
-.hero-card{background:rgba(255,255,255,.96);border-radius:14px;padding:10px 12px;flex:1;min-width:0}
-.hero-card b{font-size:13px}
-.hero-card span{font-size:12px;color:#6b5d4f;display:block}
-.hero-card strong{color:#e65c00}
-.tag{background:#fff!important;color:#111!important}
-.login-right{background:#fffaf2}
-.login-box{border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
-.login-box h2{letter-spacing:2px}
-@media(max-width:850px){
-.login-page{flex-direction:column}
-.login-left{min-height:560px}
-.login-left h1{font-size:38px}
-.hero-cards{flex-direction:column}
-}
-</style>
 </head>
 <body data-tema="claro" data-role="admin">
 
-<!-- ========== 1. LOGIN ========== -->
+<!-- ========== 1. LOGIN / PAGINA INICIAL ========== -->
 <div class="login-page" id="loginPage">
   <div class="login-left">
     <img class="bg" src="/static/imagem/hamburguer.jpg" onerror="this.src='/static/imagem/logo.jpg'">
@@ -52,14 +20,14 @@
       <p>Carnes no carvão, hambúrguer suculento, prego, batatas crocantes, batidos e sumos frescos. Encomenda, paga com M-Pesa e levanta rápido.</p>
       <div class="hero-btns">
         <button class="b1" onclick="document.getElementById('loginTel').focus()">🍔 VER MENU →</button>
-        <button class="b2" onclick="modo('criar',document.querySelectorAll('.tabs2 button')[3])">FAZER PEDIDO</button>
+        <button class="b2" onclick="modo('criar')">FAZER PEDIDO</button>
       </div>
       <div class="hero-cards">
         <div class="hero-card">🍔 <b>Hambúrguer da Casa</b><span>Suculento • Queijo • Molho Tongas</span><strong>350 MT</strong></div>
         <div class="hero-card">🍟 <b>Batatas Fritas</b><span>Crocantes • Douradas</span><strong>150 MT</strong></div>
         <div class="hero-card">⭐ <b>Promo Hoje</b><span>Hambúrguer + Batatas</span><strong>-20% HOJE</strong></div>
       </div>
-      <div style="margin-top:16px"><span class="tag">🔥 TONGAS • Lanchonete & BBQ • ⭐ 4.9 • 2.500+ clientes felizes</span></div>
+      <div><span class="tag">🔥 TONGAS • Lanchonete & BBQ • ⭐ 4.9 • 2.500+ clientes felizes</span></div>
     </div>
   </div>
   <div class="login-right">
@@ -68,7 +36,7 @@
         <span>🍔 <b>TONGAS</b></span>
         <button onclick="trocarTema()" id="btnTema" style="border:none;background:#EFE9DD;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:700">🌙 Escuro</button>
       </div>
-      <div style="text-align:center"><img src="/static/imagem/logo.jpg" style="width:110px;height:110px;border-radius:50%;object-fit:cover;background:#fff;padding:4px;border:3px solid #ff7a00;box-shadow:0 8px 20px rgba(255,122,0,.25)" onerror="this.style.display='none'"></div>
+      <div style="text-align:center"><img src="/static/imagem/logo.jpg" style="width:110px;height:110px;border-radius:50%;object-fit:cover;background:#fff;padding:4px;border:3px solid #FF7A00" onerror="this.style.display='none'"></div>
       <h2>TONGAS</h2>
       <p class="sub">Lanchonete & BBQ • Matola</p>
       <p class="date" id="dataHoje"></p>
@@ -117,14 +85,12 @@
 <!-- ========== 3. APP / DASHBOARD ========== -->
 <div id="app" class="hidden">
   <div class="topbar">
-    <div class="brand"><img src="/static/imagem/logo.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #ff7a00;background:#fff"><div><b>TONGAS</b><small>Lanchonete & BBQ • Matola</small></div></div>
+    <div class="brand"><img src="/static/imagem/logo.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #FF7A00;background:#fff"><div><b>TONGAS</b><small>Lanchonete & BBQ • Matola</small></div></div>
     <div class="top-actions"><button class="btn" onclick="trocarTema()">🌙 Escuro</button><button class="btn" onclick="toggleMenu()">☰</button><span>🔔</span><img class="avatar-top" id="meuAvatar" src="/static/imagem/logo.jpg" onclick="abrirPerfil()"></div>
   </div>
-
   <div class="layout">
     <div class="sidebar" id="sidebar">
       <div class="perfil"><img id="sideFoto" src="/static/imagem/logo.jpg"><div><b id="saudacao">Olá, Tongas</b><br><small id="infoUser" style="color:#FFE9B8">Admin</small><br><small id="infoPontos" style="color:#FFE9B8">⭐ Pontos: 0</small></div></div>
-
       <div id="menuAdmin">
         <h4>Admin</h4>
         <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)" class="on">🏠 Dashboard</button>
@@ -140,7 +106,6 @@
         <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Histórico</button>
         <button data-sec="sugestaoSec" onclick="mostrarSec('sugestaoSec',this)">💡 Sugestões</button>
       </div>
-
       <div id="menuFunc" class="hidden">
         <h4>Funcionário</h4>
         <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">📦 Vendas</button>
@@ -152,7 +117,6 @@
         <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">💳 Dívidas</button>
         <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Histórico</button>
       </div>
-
       <div id="menuCliente" class="hidden">
         <h4>Cliente</h4>
         <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">🍔 Produtos</button>
@@ -161,51 +125,38 @@
         <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Meu Histórico</button>
         <button data-sec="sugestaoSec" onclick="mostrarSec('sugestaoSec',this)">💡 Sugestão</button>
       </div>
-
       <h4>Conta</h4>
       <button onclick="abrirPerfil()">⚙️ Meu Perfil</button>
       <button class="sair" onclick="sair()">🚪 Sair</button>
     </div>
-
     <div class="main">
       <div id="dashSec">
         <div class="kpis"><div class="kpi"><span>💰 Vendas Semana</span><b id="tVendas">--</b></div><div class="kpi"><span>📈 Lucro Semana</span><b id="tLucro">--</b></div><div class="kpi"><span>👥 Clientes</span><b id="tClientes">--</b></div><div class="kpi"><span>💳 Dívidas</span><b id="tDividas">--</b></div></div>
         <div class="card"><h2>📈 Últimos 7 Dias</h2><div class="chart" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div></div>
         <div class="card"><h2>🔥 Mais Vendidos</h2><div id="maisVendidos"></div></div>
       </div>
-
       <div id="produtosSec" class="hidden">
         <div class="card"><h2>🍔 Produtos</h2><input id="pesquisaProd" placeholder="🔍 Procurar..." oninput="carregarDados()"><div class="prod-grid" id="gridProd"></div></div>
         <div class="card" id="adminProdForm"><h3>Adicionar / Editar Produto</h3><input id="pNome" placeholder="Nome"><input id="pCat" placeholder="Categoria: Lanches / Bebidas / Batidos"><input id="pPreco" type="number" placeholder="Preço MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock"><input id="pDesc" placeholder="Descrição"><label>Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-dark" id="btnSalvarProd" onclick="salvarProd()">Adicionar Produto</button></div>
       </div>
-
       <div id="vendasSec" class="hidden">
         <div class="card"><h2>📦 Nova Venda</h2><label>Produto</label><select id="vProd"></select><label>Quantidade</label><input id="vQtd" type="number" value="1"><label>Cliente</label><input id="vCliente" placeholder="Cliente Balcão"><label>Telefone cliente</label><input id="vTel" placeholder="84..."><label>Pagamento</label><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Fiado / Dívida</option></select><label>Data pagamento (se fiado)</label><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Confirmar Venda ✅</button></div>
       </div>
-
       <div id="producaoSec" class="hidden"><div class="card"><h2>🏭 Produção</h2><select id="prodProd"></select><input id="prodQtd" type="number" value="1" placeholder="Qtd produzida"><input id="prodObs" placeholder="Obs"><button class="btn btn-dark" onclick="addProducao()">Registar Produção</button></div></div>
-
       <div id="caixaSec" class="hidden"><div class="card"><h2>💰 Despesa</h2><input id="sDesc" placeholder="Descrição: Gás, Transporte..."><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Gás</option><option>Transporte</option><option>Salário</option><option>Manutenção</option></select><button class="btn btn-red" onclick="addDespesa()">Registar Despesa</button></div></div>
-
       <div id="fornecedorSec" class="hidden">
         <div class="card"><h2>🛒 Fornecedores</h2><div id="listaForn"></div></div>
         <div class="card" id="adminFornForm"><h3>Novo Fornecedor</h3><input id="fNome" placeholder="Nome"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="Produto"><input id="fPreco" type="number" placeholder="Preço"><input id="fLocal" placeholder="Localização"><button class="btn btn-dark" onclick="addForn()">Adicionar Fornecedor</button></div>
         <div class="card"><h3>Nova Compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço unitário"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option></select><button class="btn btn-dark" onclick="addCompra()">Registar Compra</button><h3>Últimas Compras</h3><div id="listaCompras"></div></div>
       </div>
-
       <div id="fazerEncSec" class="hidden"><div class="card"><h2>🎂 Fazer Encomenda</h2><label>Tipo</label><select id="eTipo"></select><label>Personalização</label><input id="ePersonalizar" placeholder="Ex: Sem cebola, extra queijo..."><label>Data entrega</label><input id="eData" type="date"><label>Hora</label><input id="eHora" type="time"><label>Modo</label><select id="eModo"><option>Levantamento</option><option>Entrega</option></select><label>Pagamento</label><select id="eSinal"><option>Ainda não paguei</option><option>Paguei sinal</option><option>Paguei tudo</option></select><input id="eObs" placeholder="Obs"><button class="btn btn-green" onclick="addEnc()">Enviar Encomenda</button></div></div>
-
       <div id="minhasEncSec" class="hidden"><div class="card"><h2>📦 Minhas Encomendas</h2><div id="listaMinhasEnc"></div></div></div>
       <div id="encomendasSec" class="hidden"><div class="card"><h2>🎂 Todas Encomendas</h2><div id="listaEnc"></div></div></div>
       <div id="dividasSec" class="hidden"><div class="card"><h2>💳 Dívidas</h2><div id="listaDividas"></div></div></div>
       <div id="pessoasSec" class="hidden"><div class="card"><h2>👥 Pessoas</h2><div id="listaPessoas"></div></div></div>
-
       <div id="adminSec" class="hidden"><div class="card"><h2>📊 Painel Admin</h2><button class="btn" onclick="exportExcel()">📊 Exportar Excel</button> <button class="btn btn-gold" onclick="backup()">💾 Backup JSON</button><div id="adminResumo" style="margin-top:14px"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div></div>
-
       <div id="historicoSec" class="hidden"><div class="card"><h2>📜 Histórico</h2><div id="listaHistorico"></div></div></div>
-
       <div id="sugestaoSec" class="hidden"><div class="card"><h2>💡 Sugestão / Reclamação</h2><select id="sugTipo"><option>Sugestão</option><option>Reclamação</option><option>Elogio</option></select><input id="sugTexto" placeholder="Escreve aqui..."><button class="btn btn-green" onclick="addSugestao()">Enviar</button><h3>Todas (Admin)</h3><div id="listaSugestoes"></div></div></div>
-
       <div class="footer">TONGAS • Lanchonete & BBQ • Matola • M-Pesa 840000000</div>
     </div>
   </div>
