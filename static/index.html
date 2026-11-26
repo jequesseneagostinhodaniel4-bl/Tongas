@@ -1,39 +1,192 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tongas - Entrar</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;transition:.3s}
-body[data-tema="claro"]{background:linear-gradient(135deg,#ff6b00,#ffb347)}
-body[data-tema="escuro"]{background:linear-gradient(135deg,#000,#1a1a1a,#333)}
-body[data-role="admin"]{--acc:#ff6b00} body[data-role="funcionario"]{--acc:#00a651} body[data-role="cliente"]{--acc:#1e90ff}
-body[data-role="admin"] .box h1{color:#ff6b00} body[data-role="funcionario"] .box h1{color:#00a651} body[data-role="cliente"] .box h1{color:#1e90ff}
-body[data-tema="escuro"] .box{background:#1e1e1e;color:#fff} body[data-tema="escuro"] .box input{background:#2a2a2a;color:#fff;border-color:#444}
-.box{background:#fff;width:400px;max-width:95vw;padding:28px;border-radius:24px;box-shadow:0 20px 50px rgba(0,0,0,.35);text-align:center}
-.box img{width:130px;height:130px;object-fit:contain;border-radius:18px}
-.box h1{letter-spacing:3px;font-size:30px} .box p{color:#888;font-size:13px;margin:6px 0 16px}
-.top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.temas{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
-.temas button{border:2px solid #eee;background:#f8f8f8;padding:7px 12px;border-radius:20px;cursor:pointer;font-weight:700;font-size:12px}
-.temas button.ativo{background:var(--acc,#ff6b00);color:#fff;border-color:var(--acc,#ff6b00)}
-input,select{width:100%;padding:13px;margin-bottom:11px;border:2px solid #eee;border-radius:12px;outline:none;font-size:15px}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--acc,#ff6b00);color:#fff;font-weight:800;font-size:16px;cursor:pointer}
-.btn2{width:100%;padding:12px;border:2px solid #eee;border-radius:12px;background:#fff;cursor:pointer;font-weight:700;margin-top:10px}
-#msg{color:#e74c3c;font-size:13px;margin:8px 0;min-height:18px}
-</style></head>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tongas - Lanchonete & BBQ</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
 <body data-tema="claro" data-role="admin">
-<div class="box">
-<div class="top-row"><span>🍔 <b>TONGAS</b></span><button onclick="trocarClaroEscuro()" id="btnCE" style="border:none;background:#eee;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:700">🌙 Escuro</button></div>
-<img src="/static/imagem/logo.jpg" onerror="this.style.display='none'"><h1>TONGAS</h1><p>Lanchonete & BBQ • Matola • Moçambique</p>
-<div class="temas"><button onclick="setRole('admin',this)" class="ativo">🟠 Admin</button><button onclick="setRole('funcionario',this)">🟢 Funcionário</button><button onclick="setRole('cliente',this)">🔵 Cliente</button></div>
-<div id="loginBox"><input id="tel" placeholder="📱 Telefone: 840000000"><input id="sen" type="password" placeholder="🔒 Senha"><button class="btn" onclick="entrar()">ENTRAR →</button><button class="btn2" onclick="mostrarCriar()">Criar Conta</button><p style="margin-top:10px">Admin: 840000000 / Tongas12345</p></div>
-<div id="criarBox" style="display:none"><input id="cNome" placeholder="👤 Nome completo"><input id="cTel" placeholder="📱 Telefone"><input id="cSenha" type="password" placeholder="🔒 Criar senha (4+)"><select id="cTipo"><option value="Cliente">Cliente</option><option value="Funcionário">Funcionário</option><option value="Admin">Admin</option></select><button class="btn" onclick="criar()">CRIAR CONTA →</button><button class="btn2" onclick="mostrarLogin()">Voltar para Entrar</button></div>
-<div id="msg"></div></div>
-<script>
-let role='admin';
-function setRole(r,b){role=r;document.body.setAttribute('data-role',r);document.querySelectorAll('.temas button').forEach(x=>x.classList.remove('ativo'));b.classList.add('ativo');localStorage.setItem('tongas_role',r)}
-function trocarClaroEscuro(){let t=document.body.getAttribute('data-tema');let n=t==='escuro'?'claro':'escuro';document.body.setAttribute('data-tema',n);document.getElementById('btnCE').innerText=n==='escuro'?'☀️ Claro':'🌙 Escuro';localStorage.setItem('tongas_tema',n)}
-let ts=localStorage.getItem('tongas_tema')||'claro';document.body.setAttribute('data-tema',ts);if(ts==='escuro')document.getElementById('btnCE').innerText='☀️ Claro';
-let rs=localStorage.getItem('tongas_role')||'admin';document.body.setAttribute('data-role',rs);
-function mostrarCriar(){document.getElementById('loginBox').style.display='none';document.getElementById('criarBox').style.display='block'}
-function mostrarLogin(){document.getElementById('criarBox').style.display='none';document.getElementById('loginBox').style.display='block'}
-async function entrar(){let tel=document.getElementById('tel').value;let sen=document.getElementById('sen').value;let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:tel,password:sen})});let j=await r.json();if(!r.ok){document.getElementById('msg').innerText=j.detail||'Erro';return}localStorage.setItem('tongas_token',j.token);localStorage.setItem('tongas_user',JSON.stringify(j.user));window.location.href='/dashboard'}
-async function criar(){let r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('cNome').value,telefone:document.getElementById('cTel').value,password:document.getElementById('cSenha').value,tipo:document.getElementById('cTipo').value})});let j=await r.json();if(!r.ok){document.getElementById('msg').innerText=j.detail||'Erro';return}localStorage.setItem('tongas_token',j.token);window.location.href='/dashboard'}
-</script></body></html>
+
+<!-- ========== 1. LOGIN ========== -->
+<div class="login-page" id="loginPage">
+  <div class="login-left">
+    <img class="bg" src="/static/imagem/hamburguer.jpg" onerror="this.src='/static/imagem/logo.jpg'">
+    <div class="shade"></div>
+    <div class="txt">
+      <h1>O sabor que <i>Matola ama.</i></h1>
+      <p>Hambúrguer, Prego, Batatas, Batidos e Sumos frescos. Encomenda, paga com M-Pesa e levanta rápido.</p>
+      <span class="tag">🔥 TONGAS • Lanchonete & BBQ</span>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-box">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>🍔 <b>TONGAS</b></span>
+        <button onclick="trocarTema()" id="btnTema" style="border:none;background:#EFE9DD;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:700">🌙 Escuro</button>
+      </div>
+      <div style="text-align:center"><img src="/static/imagem/logo.jpg" style="width:90px;height:90px;border-radius:50%;object-fit:contain;background:#fff;padding:5px" onerror="this.style.display='none'"></div>
+      <h2>TONGAS</h2>
+      <p class="sub">Lanchonete & BBQ • Matola</p>
+      <p class="date" id="dataHoje"></p>
+      <div class="tabs2">
+        <button onclick="setRole('admin',this)" class="on">🟠 Admin</button>
+        <button onclick="setRole('funcionario',this)">🟢 Funcionário</button>
+        <button onclick="setRole('cliente',this)">🔵 Cliente</button>
+      </div>
+      <div class="tabs2">
+        <button onclick="modo('login',this)" class="on" id="tabLogin">ENTRAR</button>
+        <button onclick="modo('criar',this)">CRIAR CONTA</button>
+      </div>
+      <div id="boxLogin">
+        <input id="loginTel" placeholder="📱 Telefone: 840000000">
+        <div class="pass"><input id="loginSenha" type="password" placeholder="🔒 Senha"><button onclick="verSenha('loginSenha')">👁️</button></div>
+        <button class="btn-main" onclick="login()">ENTRAR →</button>
+        <p style="text-align:center;font-size:12px;color:#8A7A68;margin-top:10px">Admin: 840000000 / Tongas12345</p>
+        <div class="msg" id="authMsg"></div>
+      </div>
+      <div id="boxCriar" class="hidden">
+        <input id="rNome" placeholder="👤 Nome completo">
+        <input id="rTel" placeholder="📱 Telefone">
+        <input id="rIdade" type="number" value="18" placeholder="Idade">
+        <input id="rEmail" placeholder="Email">
+        <input id="rBairro" placeholder="Bairro">
+        <input id="rEndereco" placeholder="Endereço">
+        <input id="rSenha" type="password" placeholder="🔒 Criar senha (4+)">
+        <select id="rTipo"><option value="Cliente">Cliente</option><option value="Funcionário">Funcionário</option><option value="Admin">Admin</option></select>
+        <button class="btn-gold" onclick="registar()">CRIAR CONTA →</button>
+        <div class="msg" id="authMsg2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 2. BOAS-VINDAS ========== -->
+<div class="welcome hidden" id="welcome">
+  <div>
+    <img id="welcomeFoto" src="/static/imagem/logo.jpg">
+    <h1 id="welcomeNome">Bem-vindo!</h1>
+    <p id="welcomeTexto">Tongas • O sabor que Matola ama</p>
+    <button onclick="entrarSistema()">ENTRAR NO PAINEL →</button>
+  </div>
+</div>
+
+<!-- ========== 3. APP / DASHBOARD ========== -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand"><img src="/static/imagem/logo.jpg" style="width:44px;height:44px;border-radius:12px;object-fit:cover"><div><b>TONGAS</b><small>Lanchonete & BBQ • Matola</small></div></div>
+    <div class="top-actions"><button class="btn" onclick="trocarTema()">🌙 Escuro</button><button class="btn" onclick="toggleMenu()">☰</button><span>🔔</span><img class="avatar-top" id="meuAvatar" src="/static/imagem/logo.jpg" onclick="abrirPerfil()"></div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <div class="perfil"><img id="sideFoto" src="/static/imagem/logo.jpg"><div><b id="saudacao">Olá, Tongas</b><br><small id="infoUser" style="color:#FFE9B8">Admin</small><br><small id="infoPontos" style="color:#FFE9B8">⭐ Pontos: 0</small></div></div>
+
+      <div id="menuAdmin">
+        <h4>Admin</h4>
+        <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)" class="on">🏠 Dashboard</button>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">🍔 Produtos</button>
+        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">📦 Vendas</button>
+        <button data-sec="producaoSec" onclick="mostrarSec('producaoSec',this)">🏭 Produção</button>
+        <button data-sec="caixaSec" onclick="mostrarSec('caixaSec',this)">💰 Caixa / Despesas</button>
+        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">🛒 Fornecedores / Compras</button>
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">🎂 Encomendas</button>
+        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">💳 Dívidas</button>
+        <button data-sec="pessoasSec" onclick="mostrarSec('pessoasSec',this)">👥 Pessoas</button>
+        <button data-sec="adminSec" onclick="mostrarSec('adminSec',this);carregarPainelAdmin()">📊 Painel Admin</button>
+        <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Histórico</button>
+        <button data-sec="sugestaoSec" onclick="mostrarSec('sugestaoSec',this)">💡 Sugestões</button>
+      </div>
+
+      <div id="menuFunc" class="hidden">
+        <h4>Funcionário</h4>
+        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">📦 Vendas</button>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">🍔 Produtos</button>
+        <button data-sec="producaoSec" onclick="mostrarSec('producaoSec',this)">🏭 Produção</button>
+        <button data-sec="caixaSec" onclick="mostrarSec('caixaSec',this)">💰 Caixa</button>
+        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">🛒 Compras</button>
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">🎂 Encomendas</button>
+        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">💳 Dívidas</button>
+        <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Histórico</button>
+      </div>
+
+      <div id="menuCliente" class="hidden">
+        <h4>Cliente</h4>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">🍔 Produtos</button>
+        <button data-sec="fazerEncSec" onclick="mostrarSec('fazerEncSec',this)">🎂 Fazer Encomenda</button>
+        <button data-sec="minhasEncSec" onclick="mostrarSec('minhasEncSec',this)">📦 Minhas Encomendas</button>
+        <button data-sec="historicoSec" onclick="mostrarSec('historicoSec',this)">📜 Meu Histórico</button>
+        <button data-sec="sugestaoSec" onclick="mostrarSec('sugestaoSec',this)">💡 Sugestão</button>
+      </div>
+
+      <h4>Conta</h4>
+      <button onclick="abrirPerfil()">⚙️ Meu Perfil</button>
+      <button class="sair" onclick="sair()">🚪 Sair</button>
+    </div>
+
+    <div class="main">
+      <div id="dashSec">
+        <div class="kpis"><div class="kpi"><span>💰 Vendas Semana</span><b id="tVendas">--</b></div><div class="kpi"><span>📈 Lucro Semana</span><b id="tLucro">--</b></div><div class="kpi"><span>👥 Clientes</span><b id="tClientes">--</b></div><div class="kpi"><span>💳 Dívidas</span><b id="tDividas">--</b></div></div>
+        <div class="card"><h2>📈 Últimos 7 Dias</h2><div class="chart" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div></div>
+        <div class="card"><h2>🔥 Mais Vendidos</h2><div id="maisVendidos"></div></div>
+      </div>
+
+      <div id="produtosSec" class="hidden">
+        <div class="card"><h2>🍔 Produtos</h2><input id="pesquisaProd" placeholder="🔍 Procurar..." oninput="carregarDados()"><div class="prod-grid" id="gridProd"></div></div>
+        <div class="card" id="adminProdForm"><h3>Adicionar / Editar Produto</h3><input id="pNome" placeholder="Nome"><input id="pCat" placeholder="Categoria: Lanches / Bebidas / Batidos"><input id="pPreco" type="number" placeholder="Preço MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock"><input id="pDesc" placeholder="Descrição"><label>Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-dark" id="btnSalvarProd" onclick="salvarProd()">Adicionar Produto</button></div>
+      </div>
+
+      <div id="vendasSec" class="hidden">
+        <div class="card"><h2>📦 Nova Venda</h2><label>Produto</label><select id="vProd"></select><label>Quantidade</label><input id="vQtd" type="number" value="1"><label>Cliente</label><input id="vCliente" placeholder="Cliente Balcão"><label>Telefone cliente</label><input id="vTel" placeholder="84..."><label>Pagamento</label><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Fiado / Dívida</option></select><label>Data pagamento (se fiado)</label><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Confirmar Venda ✅</button></div>
+      </div>
+
+      <div id="producaoSec" class="hidden"><div class="card"><h2>🏭 Produção</h2><select id="prodProd"></select><input id="prodQtd" type="number" value="1" placeholder="Qtd produzida"><input id="prodObs" placeholder="Obs"><button class="btn btn-dark" onclick="addProducao()">Registar Produção</button></div></div>
+
+      <div id="caixaSec" class="hidden"><div class="card"><h2>💰 Despesa</h2><input id="sDesc" placeholder="Descrição: Gás, Transporte..."><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Gás</option><option>Transporte</option><option>Salário</option><option>Manutenção</option></select><button class="btn btn-red" onclick="addDespesa()">Registar Despesa</button></div></div>
+
+      <div id="fornecedorSec" class="hidden">
+        <div class="card"><h2>🛒 Fornecedores</h2><div id="listaForn"></div></div>
+        <div class="card" id="adminFornForm"><h3>Novo Fornecedor</h3><input id="fNome" placeholder="Nome"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="Produto"><input id="fPreco" type="number" placeholder="Preço"><input id="fLocal" placeholder="Localização"><button class="btn btn-dark" onclick="addForn()">Adicionar Fornecedor</button></div>
+        <div class="card"><h3>Nova Compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço unitário"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option></select><button class="btn btn-dark" onclick="addCompra()">Registar Compra</button><h3>Últimas Compras</h3><div id="listaCompras"></div></div>
+      </div>
+
+      <div id="fazerEncSec" class="hidden"><div class="card"><h2>🎂 Fazer Encomenda</h2><label>Tipo</label><select id="eTipo"></select><label>Personalização</label><input id="ePersonalizar" placeholder="Ex: Sem cebola, extra queijo..."><label>Data entrega</label><input id="eData" type="date"><label>Hora</label><input id="eHora" type="time"><label>Modo</label><select id="eModo"><option>Levantamento</option><option>Entrega</option></select><label>Pagamento</label><select id="eSinal"><option>Ainda não paguei</option><option>Paguei sinal</option><option>Paguei tudo</option></select><input id="eObs" placeholder="Obs"><button class="btn btn-green" onclick="addEnc()">Enviar Encomenda</button></div></div>
+
+      <div id="minhasEncSec" class="hidden"><div class="card"><h2>📦 Minhas Encomendas</h2><div id="listaMinhasEnc"></div></div></div>
+      <div id="encomendasSec" class="hidden"><div class="card"><h2>🎂 Todas Encomendas</h2><div id="listaEnc"></div></div></div>
+      <div id="dividasSec" class="hidden"><div class="card"><h2>💳 Dívidas</h2><div id="listaDividas"></div></div></div>
+      <div id="pessoasSec" class="hidden"><div class="card"><h2>👥 Pessoas</h2><div id="listaPessoas"></div></div></div>
+
+      <div id="adminSec" class="hidden"><div class="card"><h2>📊 Painel Admin</h2><button class="btn" onclick="exportExcel()">📊 Exportar Excel</button> <button class="btn btn-gold" onclick="backup()">💾 Backup JSON</button><div id="adminResumo" style="margin-top:14px"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div></div>
+
+      <div id="historicoSec" class="hidden"><div class="card"><h2>📜 Histórico</h2><div id="listaHistorico"></div></div></div>
+
+      <div id="sugestaoSec" class="hidden"><div class="card"><h2>💡 Sugestão / Reclamação</h2><select id="sugTipo"><option>Sugestão</option><option>Reclamação</option><option>Elogio</option></select><input id="sugTexto" placeholder="Escreve aqui..."><button class="btn btn-green" onclick="addSugestao()">Enviar</button><h3>Todas (Admin)</h3><div id="listaSugestoes"></div></div></div>
+
+      <div class="footer">TONGAS • Lanchonete & BBQ • Matola • M-Pesa 840000000</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 4. MODAL PERFIL ========== -->
+<div class="modal hidden" id="modalPerfil">
+  <div class="box">
+    <h3>Meu Perfil</h3>
+    <img id="perfilFotoPrev" src="/static/imagem/logo.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover">
+    <input type="file" accept="image/*" onchange="lerFotoPerfil(event)">
+    <input id="perfilNome" placeholder="Nome">
+    <input id="perfilBairro" placeholder="Bairro">
+    <input id="perfilEndereco" placeholder="Endereço">
+    <input id="perfilEmail" placeholder="Email">
+    <button class="btn btn-dark" style="width:100%" onclick="salvarPerfil()">Salvar Perfil</button>
+    <h3>Trocar Senha</h3>
+    <input id="senhaAntiga" type="password" placeholder="Senha antiga">
+    <input id="senhaNova" type="password" placeholder="Nova senha">
+    <button class="btn btn-gold" style="width:100%" onclick="mudarSenha()">Trocar Senha</button>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="fecharPerfil()">Fechar</button>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
